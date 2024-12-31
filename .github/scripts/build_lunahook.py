@@ -1,10 +1,10 @@
 import os, sys, re, shutil
-import subprocess
 
 rootDir = os.path.dirname(__file__)
 if not rootDir:
     rootDir = os.path.abspath(".")
 rootDir = os.path.abspath(os.path.join(rootDir, "../../cpp/LunaHook"))
+
 if len(sys.argv) and sys.argv[1] == "loadversion":
     os.chdir(rootDir)
     with open("CMakeLists.txt", "r", encoding="utf8") as ff:
@@ -14,18 +14,14 @@ if len(sys.argv) and sys.argv[1] == "loadversion":
         versionstring = f"v{version_major}.{version_minor}.{version_patch}"
         print("version=" + versionstring)
         exit()
+
 if len(sys.argv) and sys.argv[1] == "merge":
     os.chdir(rootDir)
     os.mkdir("../build")
     os.mkdir("builds")
-    
+
     shutil.copytree(
         f"build/64/Release",
-        f"../build/Release",
-        dirs_exist_ok=True,
-    )
-    shutil.copytree(
-        f"build/winxp/Release_winxp",
         f"../build/Release",
         dirs_exist_ok=True,
     )
@@ -33,7 +29,7 @@ if len(sys.argv) and sys.argv[1] == "merge":
     targetdir = f"../build/Release"
     target = f"builds/Release.zip"
     os.system(
-        rf'"C:\Program Files\7-Zip\7z.exe" a -m0=Deflate -mx9 {target} {targetdir}'
+        rf'"C:\\Program Files\\7-Zip\\7z.exe" a -m0=Deflate -mx9 {target} {targetdir}'
     )
     exit()
 
@@ -41,10 +37,9 @@ print(sys.version)
 print(__file__)
 print(rootDir)
 
-
 def build_langx(bit, onlycore):
     config = (
-        f"-DBUILD_PLUGIN=OFF -DWINXP=OFF -DBUILD_GUI=ON -DBUILD_CLI=ON"
+        f"-DBUILD_PLUGIN=OFF -DBUILD_GUI=ON -DBUILD_CLI=ON"
         if not onlycore
         else ""
     )
@@ -64,24 +59,6 @@ cmake --build ../build/x64 --config Release --target ALL_BUILD -j 14
 """
             )
     os.system(f"cmd /c do.bat")
-
-
-def build_langx_xp( core):
-    url = "https://github.com/Chuyu-Team/YY-Thunks/releases/download/v1.0.7/YY-Thunks-1.0.7-Binary.zip"
-    os.system(rf"curl -SLo YY-Thunks-1.0.7-Binary.zip " + url)
-    os.system(rf"7z x -y YY-Thunks-1.0.7-Binary.zip -o../../libs/YY-Thunks")
-    os.system("dir")
-    flags = "" if core else " -DBUILD_GUI=ON -DBUILD_CLI=ON "
-    with open("do.bat", "w") as ff:
-        ff.write(
-            rf"""
-
-cmake -DBUILD_PLUGIN=OFF -DWINXP=ON {flags} ../CMakeLists.txt -G "Visual Studio 16 2019" -A win32 -T v141_xp -B ../build/x86_xp
-cmake --build ../build/x86_xp --config Release --target ALL_BUILD -j 14
-"""
-        )
-    os.system(f"cmd /c do.bat")
-
 
 os.chdir(os.path.join(rootDir, "scripts"))
 if sys.argv[1] == "plugin":
@@ -104,10 +81,5 @@ cmake --build ../build/plugin64 --config Release --target ALL_BUILD -j 14
     os.system(f"cmd /c buildplugin.bat")
 elif sys.argv[1] == "build":
     bit = sys.argv[2]
-    if bit == "winxp":
-        build_langx_xp(False)
-    elif bit == "winxp_core":
-        build_langx_xp(True)
-    else:
-        onlycore = int(sys.argv[3]) if len(sys.argv) >= 4 else False
-        build_langx(bit, onlycore)
+    onlycore = int(sys.argv[3]) if len(sys.argv) >= 4 else False
+    build_langx(bit, onlycore)
