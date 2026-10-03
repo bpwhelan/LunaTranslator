@@ -1,0 +1,59 @@
+name: GSM LunaHook artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/gsm-lunahook-update]
+    paths:
+      - .github/workflows/gsm-lunahook.yml
+      - src/NativeImpl/LunaHook/**
+      - src/NativeImpl/version*
+      - src/version.txt
+      - src/scripts/test_gsm_lunahook.mjs
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: Win32
+            bits: 32
+          - arch: x64
+            bits: 64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure CLI, host, and hook
+        run: cmake -S src/NativeImpl/LunaHook -B build/gsm -G "Visual Studio 17 2022" -A ${{ matrix.arch }} -DBUILD_CLI=ON -DBUILD_GUI=OFF -DWIN10ABOVE=ON -DBUILD_GSM_SMOKE_TARGET=ON
+      - name: Build matching components
+        run: cmake --build build/gsm --config Release --target LunaHook LunaHostDll LunaHostCLI GsmHookSmokeTarget --parallel 4
+      - name: Test GSM pipe protocol and native attachment
+        run: node src/scripts/test_gsm_lunahook.mjs src/NativeImpl/LunaHook/builds/Release_win10 ${{ matrix.bits }}
+      - name: Stage runtime and source provenance
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $built = 'src/NativeImpl/LunaHook/builds/Release_win10'
+          New-Item -ItemType Directory -Path artifact/luna_builds -Force | Out-Null
+          foreach ($name in @('LunaHook${{ matrix.bits }}.dll', 'LunaHost${{ matrix.bits }}.dll', 'LunaHostCLI${{ matrix.bits }}.exe', 'LunaTmpFontLoader.dll')) {
+            Copy-Item -LiteralPath "$built/$name" -Destination artifact/luna_builds
+          }
+          [ordered]@{
+            sourceRepository = '${{ github.repository }}'
+            sourceRevision = (git rev-parse HEAD)
+            version = (Get-Content src/version.txt -Raw).Trim()
+            arch = '${{ matrix.arch }}'
+            minhook = (git -C build/gsm/_deps/minhook-src rev-parse HEAD)
+            uchardet = (git -C build/gsm/_deps/uchardet-src rev-parse HEAD)
+          } | ConvertTo-Json | Set-Content artifact/provenance-${{ matrix.bits }}.json -Encoding utf8NoBOM
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gsm-lunahook-${{ matrix.bits }}
+          path: artifact/
+          if-no-files-found: error
+          retention-days: 30

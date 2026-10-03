@@ -35,6 +35,7 @@ else()
 endif()
 
 option(BUILD_GUI "BUILD_GUI" OFF)
+option(BUILD_CLI "Build the UTF-16 command-line host used by GSM" OFF)
 if(NOT WIN10ABOVE)
     if(WINXP)
         set(__APP "_winxp")
