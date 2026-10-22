@@ -284,11 +284,6 @@
 			}
 		}
 	},
-	"sugoix": {
-		"args": {
-			"api": "http://127.0.0.1:14366/"
-		}
-	},
 	"huoshanapi": {
 		"args": {
 			"Access Key ID": "",
@@ -707,7 +702,7 @@
 	},
 	"sakura": {
 		"args": {
-			"API接口地址": "http://127.0.0.1:8080/",
+			"API接口地址": "http://127.0.0.1:9931/",
 			"model": "",
 			"modellistcache": [],
 			"流式输出": true,
@@ -757,6 +752,7 @@
 				"internal": [
 					"auto",
 					"Hy-MT2",
+					"Index-Translate",
 					"GalTransl",
 					"SakuraLLM v0.9",
 					"SakuraLLM v0.10",
@@ -766,6 +762,7 @@
 				"list": [
 					"自动",
 					"Hy-MT2",
+					"Index-Translate",
 					"GalTransl",
 					"SakuraLLM v0.9",
 					"SakuraLLM v0.10",
